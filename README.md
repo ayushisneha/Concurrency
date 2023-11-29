@@ -1,4 +1,4 @@
-# Concurrency
+# Multithreading & Concurrency
 ## Introduction
 
 There's two kinds of concurrent programming model:
@@ -43,6 +43,11 @@ int main() {
 Now we have two threads running, the main thread and the t1. Here, main thread waits for t1 to finish, we can also detach the t1 thread and make it independent with *t1.detach()* instead of t1.join. the main thread can run fast and end up exiting without t1 to finish up, and hence cout nothing. t1 now becomes a daemon process, some daemon process may be alive till the system is shut down. 
 
 You can join or detach the thread only once,else it will crash - once detached always detached.
+
+move() - transfers ownership
+
+## Race Condition and Mutex
+
 
 
 
