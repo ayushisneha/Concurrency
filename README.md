@@ -48,6 +48,111 @@ move() - transfers ownership
 
 ## Race Condition and Mutex
 
+```
+#include <iostream>
+#include <thread>
+using namespace std;
+
+void func() {
+    for(int i=0;i<10;i++){
+        cout<<"From thread: "<<i<<endl;
+    }
+}
+
+int main() {
+    thread t1(func);
+
+    for(int i=-10;i<0;i++){
+        cout<<"From main: "<<i<<endl;
+    }
+
+    t1.join();
+    return 0;
+}
+
+Output:
+From thread: From main: 0-10
+From thread: 1
+From thread: 2
+....
+```
+
+Here both the t1 thread and the main thread is competing(or racing) for a common resource - cout and is causing the messedup output. One way to solve for race conditon is using mutex to synchronize the access of shared resource. 
+
+Instead of calling cout from each thread we can create a new function and lock the print function - 
+```
+#include <iostream>
+#include <thread>
+#include <mutex>
+using namespace std;
+
+std::mutex mu;
+
+void shared_print(string msg, int id) {
+    mu.lock();
+    cout<<msg<<id<<endl;
+    mu.unlock();
+}
+
+void func() {
+    for(int i=0;i<10;i++){
+        shared_print("From thread: ", i);
+    }
+}
+
+int main() {
+    thread t1(func);
+
+    for(int i=-10;i<0;i++){
+        shared_print("From main: ", i);
+    }
+
+    t1.join();
+    return 0;
+}
+
+This works completely fine.
+```
+
+Issues: what if the cout in shared_print throw an exception, the print statement will always be locked and hence inaccessible, we hence use lock guard instead of mu.lock and unlock. This ensures the mutex will be unlocked when the resource acquisition goes out of scope.
+
+```
+#include <iostream>
+#include <thread>
+#include <mutex>
+using namespace std;
+
+std::mutex mu;
+
+void shared_print(string msg, int id) {
+    lock_guard<mutex> guard(mu);
+    cout<<msg<<id<<endl;
+}
+
+void func() {
+    for(int i=0;i<10;i++){
+        shared_print("From thread: ", i);
+    }
+}
+
+int main() {
+    thread t1(func);
+
+    for(int i=-10;i<0;i++){
+        shared_print("From main: ", i);
+    }
+
+    t1.join();
+    return 0;
+}
+```
+Another issue - cout is not completely under the mutex lock as its a global resource and is still accessible elsewhere even though its locked in shared_print.
+
+
+
+
+
+
 
 
 
